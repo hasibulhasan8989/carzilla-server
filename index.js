@@ -37,22 +37,25 @@ async function run() {
     });
 
     app.get("/products/:id", async (req, res) => {
-       const id=req.params.id
-       const query={_id:new ObjectId(id)}
-       const result = await productCollection.findOne(query)
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await productCollection.findOne(query);
       res.send(result);
     });
+
     app.post("/cart", async (req, res) => {
       const cartItem = req.body;
+
       const email = req.body.email;
-      const id = req.body.id;
+      const id = req.body.item;
 
       const query = {
         email: email,
-        id: id,
+        item: id,
       };
 
       const isExit = await cartCollection.findOne(query);
+
       let result = {};
 
       if (isExit) {
@@ -62,6 +65,7 @@ async function run() {
       if (!isExit) {
         result = await cartCollection.insertOne(cartItem);
       }
+
       res.send(result);
     });
 

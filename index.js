@@ -39,6 +39,34 @@ async function run() {
       const result = await productCollection.find().toArray();
       res.send(result);
     });
+    // ------------Pagination-----------------
+    app.get("/allProducts", async (req, res) => {
+      const limit = Number(req.query.limit);
+      const sort=req.query.sort
+      const search=req.query.search
+     const query ={
+      name:{$regex: search ,$options:'i'}
+     }
+
+      const pageNo = Number(req.query.pageNo) - 1;
+      let sortOption = {};
+      if(sort==='asc'){
+        sortOption.price=+1
+      }
+      if(sort==='dec'){
+        sortOption.price=-1
+      }
+
+      const result = await productCollection
+        .find(query)
+        .skip(limit * pageNo)
+        .limit(limit)
+        .sort(sortOption)
+      
+        .toArray();
+
+        res.send(result)
+    });
     //-------------SingleProduct------------------
     app.get("/products/:id", async (req, res) => {
       const id = req.params.id;
@@ -136,6 +164,22 @@ async function run() {
       }
 
       const result = await testDriveRequest.insertOne(driveRequest);
+      res.send(result);
+    });
+
+    app.get('/testDrive',async(req,res)=>{
+      const result=await testDriveRequest.find().toArray()
+      res.send(result)
+    })
+
+    app.get("/productCount", async (req, res) => {
+      const search=req.query.search
+      console.log("what",search)
+       const query ={
+      name:{$regex: search ,$options:'i'}
+     }
+      const result = await productCollection.countDocuments(query);
+      console.log(result)
       res.send(result);
     });
   } finally {

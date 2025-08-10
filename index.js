@@ -39,22 +39,45 @@ async function run() {
       const result = await productCollection.find().toArray();
       res.send(result);
     });
+    // ------------Post A Products-----------------
+    app.post("/products", async (req, res) => {
+      const product = req.body;
+      const result = await productCollection.insertOne(product);
+      res.send(result);
+    });
+    // ------------Delete A Products-----------------
+    app.delete("/products/:id", async (req, res) => {
+      const id = req.params.id
+      const query={_id: new ObjectId(id)}
+      const result = await productCollection.deleteOne(query)
+      res.send(result);
+    });
+    app.put("/products/:id", async (req, res) => {
+      const id = req.params.id
+      const updateCar=req.body
+      const updateDoc={
+        $set:{...updateCar}
+      }
+      const query={_id: new ObjectId(id)}
+      const result = await productCollection.updateOne(query,updateDoc)
+      res.send(result);
+    });
     // ------------Pagination-----------------
     app.get("/allProducts", async (req, res) => {
       const limit = Number(req.query.limit);
-      const sort=req.query.sort
-      const search=req.query.search
-     const query ={
-      name:{$regex: search ,$options:'i'}
-     }
+      const sort = req.query.sort;
+      const search = req.query.search;
+      const query = {
+        name: { $regex: search, $options: "i" },
+      };
 
       const pageNo = Number(req.query.pageNo) - 1;
       let sortOption = {};
-      if(sort==='asc'){
-        sortOption.price=+1
+      if (sort === "asc") {
+        sortOption.price = +1;
       }
-      if(sort==='dec'){
-        sortOption.price=-1
+      if (sort === "dec") {
+        sortOption.price = -1;
       }
 
       const result = await productCollection
@@ -62,10 +85,10 @@ async function run() {
         .skip(limit * pageNo)
         .limit(limit)
         .sort(sortOption)
-      
+
         .toArray();
 
-        res.send(result)
+      res.send(result);
     });
     //-------------SingleProduct------------------
     app.get("/products/:id", async (req, res) => {
@@ -167,21 +190,46 @@ async function run() {
       res.send(result);
     });
 
-    app.get('/testDrive',async(req,res)=>{
-      const result=await testDriveRequest.find().toArray()
-      res.send(result)
-    })
-
-    app.get("/productCount", async (req, res) => {
-      const search=req.query.search
-      console.log("what",search)
-       const query ={
-      name:{$regex: search ,$options:'i'}
-     }
-      const result = await productCollection.countDocuments(query);
-      console.log(result)
+    app.get("/testDrive", async (req, res) => {
+      const result = await testDriveRequest.find().toArray();
       res.send(result);
     });
+    app.get("/testDrive/:email", async (req, res) => {
+      const email=req.params.email
+      const query={email:email}
+      const result = await testDriveRequest.find(query).toArray();
+      res.send(result);
+    });
+
+    app.get("/productCount", async (req, res) => {
+      const search = req.query.search;
+      
+      const query = {
+        name: { $regex: search, $options: "i" },
+      };
+      const result = await productCollection.countDocuments(query);
+      console.log(result);
+      res.send(result);
+    });
+
+
+    app.get('/totalRevenue',async(req,res)=>{
+      const[{total}]= await orderCollection.aggregate(
+        [
+        {
+          $group:{
+            _id:null,
+            total:{$sum:'$total'}
+          }
+        }
+      ]
+      ).toArray()
+      res.send({totalRevenue:total })
+    })
+
+
+
+
   } finally {
     // await client.close();
   }
